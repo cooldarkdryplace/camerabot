@@ -73,8 +73,9 @@ func GetUpdates() []Update {
 	return apiResponse.Updates
 }
 
-func SendTextMessage(chat_id int, m string) {
-	http.Get(fmt.Sprintf("%s%s/%s?chat_id=%v&text=%s", baseURL, token, methodSendMessage, chat_id, m))
+func SendTextMessage(chat int, m string) {
+	log.Printf("Sending test message: %s to chat: %v", m, chat)
+	http.Get(fmt.Sprintf("%s%s/%s?chat_id=%v&text=%s", baseURL, token, methodSendMessage, chat, m))
 }
 
 func getJson(url string, target interface{}) error {

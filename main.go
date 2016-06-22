@@ -30,6 +30,7 @@ func main() {
 }
 
 func getUpdates(out chan telegram.Update) {
+	log.Println("Getting updates.")
 	for _, u := range telegram.GetUpdates() {
 		out <- u
 	}
@@ -44,11 +45,14 @@ func startConsumer(updates chan telegram.Update, processed chan int) {
 }
 
 func processUpdate(u telegram.Update, processed chan int) {
-	log.Printf("Processing update #%s", u.ID)
+	log.Printf("COmparing update ID #%v with last: %v", u.ID, lastUpdate)
 
 	if u.ID > lastUpdate {
-
+		log.Printf("Processing update: %v", u.ID)
 		processed <- u.ID
+
+		log.Printf("Message type: %s", u.Message.Entities[0].Type)
+
 		if u.Message.Entities[0].Type == "bot_command" {
 			sayHi()
 		}
@@ -61,6 +65,7 @@ func keepTrackOfUpdates(processed chan int) {
 	p := <- processed
 
 	if p > lastUpdate {
+		log.Println("Updating last")
 		lastUpdate = p
 	}
 }
