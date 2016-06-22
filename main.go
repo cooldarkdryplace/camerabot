@@ -2,41 +2,73 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"github.com/bilinguliar/camerabot/telegram"
-	"time"
 )
 
-func main() {
-	log.Print("Hi")
+const (
+	chatId = -136923106
+)
 
+var lastUpdate int
+
+func main() {
+	log.Print("Starting...")
+	processedChan := make (chan int)
 	updatesChan := make(chan telegram.Update)
-	go processUpdates(updatesChan)
-	go monitorUpdates(updatesChan)
+	go startConsumer(updatesChan, processedChan)
+	go keepTrackOfUpdates(processedChan)
+
+	log.Print("Started")
 
 	for {
+		getUpdates(updatesChan)
 		time.Sleep(time.Second * 10)
 		log.Print("Main sleeping...")
 	}
 }
 
-func monitorUpdates(c chan telegram.Update) {
-	for {
-		for _, u:= range telegram.GetUpdates() {
-			c <- u
-		}
-
-		log.Print("Updates mon sleeping...")
-		time.Sleep(time.Second * 5)
+func getUpdates(out chan telegram.Update) {
+	for _, u := range telegram.GetUpdates() {
+		out <- u
 	}
 }
 
-func processUpdates(c chan telegram.Update) {
+func startConsumer(updates chan telegram.Update, processed chan int) {
+	log.Print("Initing consumer...")
 
+	for {
+		go processUpdate(<-updates, processed)
+	}
+}
+
+func processUpdate(u telegram.Update, processed chan int) {
+	log.Printf("Processing update #%s", u.ID)
+
+	if u.ID > lastUpdate {
+
+		processed <- u.ID
+		if u.Message.Entities[0].Type == "bot_command" {
+			sayHi()
+		}
+	}
+}
+
+func keepTrackOfUpdates(processed chan int) {
+	log.Print("Keeping track of updates")
+
+	p := <- processed
+
+	if p > lastUpdate {
+		lastUpdate = p
+	}
 }
 
 func sayHi() {
+	log.Print("Saying hi.")
 
+	telegram.SendTextMessage(chatId, "Hi there.")
 }
 
 func sendPhoto() {

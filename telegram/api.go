@@ -12,6 +12,7 @@ const (
 
 	token = "181285124:AAEp5UShB5s7LyDMqJGWBDFR_DeBtBUlBXE"
 
+	methodSendMessage = "sendMessage"
 	methodSendPhoto = "sendPhoto"
 	methodGetUpdates = "getUpdates"
 	methodsendChatAction = "sendChatAction"
@@ -70,6 +71,10 @@ func GetUpdates() []Update {
 	}
 
 	return apiResponse.Updates
+}
+
+func SendTextMessage(chat_id int, m string) {
+	http.Get(fmt.Sprintf("%s%s/%s?chat_id=%v&text=%s", baseURL, token, methodSendMessage, chat_id, m))
 }
 
 func getJson(url string, target interface{}) error {
