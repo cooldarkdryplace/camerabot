@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"encoding/json"
 	"log"
+	"io"
+	"bytes"
+	"mime/multipart"
+	"os"
 )
 
 const (
@@ -76,6 +80,32 @@ func GetUpdates() []Update {
 func SendTextMessage(chat int, m string) {
 	log.Printf("Sending test message: %s to chat: %v", m, chat)
 	http.Get(fmt.Sprintf("%s%s/%s?chat_id=%v&text=%s", baseURL, token, methodSendMessage, chat, m))
+}
+
+func SendPicture(chat int, filename string) {
+	bodyBuf := &bytes.Buffer{}
+	bodyWriter := multipart.NewWriter(bodyBuf)
+
+	// this step is very important
+	fileWriter, err := bodyWriter.CreateFormFile("uploadfile", filename)
+	if err != nil {
+		log.Panic("error writing to buffer")
+	}
+
+	// open file handle
+	fh, err := os.Open(filename)
+	if err != nil {
+		log.Panic("error opening file")
+	}
+
+	_, err = io.Copy(fileWriter, fh)
+	if err != nil {
+		log.Panic("error reading file")
+	}
+
+	contentType := bodyWriter.FormDataContentType()
+	bodyWriter.Close()
+	http.Post(fmt.Sprintf("%s%s/%s?chat_id=%v", baseURL, token, methodSendMessage, chat), contentType, bodyBuf)
 }
 
 func getJson(url string, target interface{}) error {

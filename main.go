@@ -29,8 +29,6 @@ func getUpdates() []telegram.Update {
 
 func processUpdates(updates []telegram.Update) {
 	for _, u := range updates {
-		log.Printf("COmparing update ID #%v with last: %v", u.ID, lastUpdate)
-
 		if !shouldBeProcessed(u) {
 			continue
 		}
@@ -39,7 +37,9 @@ func processUpdates(updates []telegram.Update) {
 		if u.Message.Entities[0].Type == "bot_command" {
 
 			if strings.Contains(u.Message.Text, "/pic") {
+				log.Println("Picture requested!")
 				go sayHi()
+				go sendPhoto()
 			}
 		}
 
@@ -69,5 +69,5 @@ func sayHi() {
 }
 
 func sendPhoto() {
-
+	telegram.SendPicture(chatId, "/home/heliko/image.jpeg")
 }
