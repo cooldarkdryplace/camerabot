@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/bilinguliar/camerabot/telegram"
+	"strings"
 )
 
 const (
@@ -14,59 +15,50 @@ const (
 var lastUpdate int
 
 func main() {
-	log.Print("Starting...")
-	processedChan := make (chan int)
-	updatesChan := make(chan telegram.Update)
-	go startConsumer(updatesChan, processedChan)
-	go keepTrackOfUpdates(processedChan)
-
-	log.Print("Started")
-
 	for {
-		getUpdates(updatesChan)
+		processUpdates(getUpdates())
 		time.Sleep(time.Second * 10)
 		log.Print("Main sleeping...")
 	}
 }
 
-func getUpdates(out chan telegram.Update) {
+func getUpdates() []telegram.Update {
 	log.Println("Getting updates.")
-	for _, u := range telegram.GetUpdates() {
-		out <- u
-	}
+	return telegram.GetUpdates()
 }
 
-func startConsumer(updates chan telegram.Update, processed chan int) {
-	log.Print("Initing consumer...")
+func processUpdates(updates []telegram.Update) {
+	for _, u := range updates {
+		log.Printf("COmparing update ID #%v with last: %v", u.ID, lastUpdate)
 
-	for {
-		go processUpdate(<-updates, processed)
-	}
-}
-
-func processUpdate(u telegram.Update, processed chan int) {
-	log.Printf("COmparing update ID #%v with last: %v", u.ID, lastUpdate)
-
-	if u.ID > lastUpdate {
-		log.Printf("Processing update: %v", u.ID)
-		processed <- u.ID
+		if !shouldBeProcessed(u) {
+			continue
+		}
 
 		log.Printf("Message type: %s", u.Message.Entities[0].Type)
-
 		if u.Message.Entities[0].Type == "bot_command" {
-			sayHi()
+
+			if strings.Contains(u.Message.Text, "/pic") {
+				go sayHi()
+			}
 		}
+
+		keepTrackOfUpdates(u.ID)
 	}
 }
 
-func keepTrackOfUpdates(processed chan int) {
-	log.Print("Keeping track of updates")
+func shouldBeProcessed(u telegram.Update) bool {
+	if u.ID <= lastUpdate || len(u.Message.Entities) == 0 {
+		return false
+	}
 
-	p := <- processed
+	return true
+}
 
-	if p > lastUpdate {
+func keepTrackOfUpdates(id int) {
+	if id > lastUpdate {
 		log.Println("Updating last")
-		lastUpdate = p
+		lastUpdate = id
 	}
 }
 
