@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	chatId = -136923106
+	chatId int32 = -136923106
 )
 
 var lastUpdate int
@@ -69,5 +69,5 @@ func sayHi() {
 }
 
 func sendPhoto() {
-	telegram.SendPicture(chatId, "/home/heliko/image.jpeg")
+	telegram.SendPicture(chatId, "/home/zakharovan/img.png")
 }

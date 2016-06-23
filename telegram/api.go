@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"mime/multipart"
 	"os"
+	"encoding/binary"
 )
 
 const (
@@ -77,35 +78,65 @@ func GetUpdates() []Update {
 	return apiResponse.Updates
 }
 
-func SendTextMessage(chat int, m string) {
+func SendTextMessage(chat int32, m string) {
 	log.Printf("Sending test message: %s to chat: %v", m, chat)
 	http.Get(fmt.Sprintf("%s%s/%s?chat_id=%v&text=%s", baseURL, token, methodSendMessage, chat, m))
 }
 
-func SendPicture(chat int, filename string) {
+func SendPicture(chat int32, filename string) {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
-	// this step is very important
-	fileWriter, err := bodyWriter.CreateFormFile("uploadfile", filename)
-	if err != nil {
-		log.Panic("error writing to buffer")
-	}
-
 	// open file handle
-	fh, err := os.Open(filename)
+	picture, err := os.Open(filename)
 	if err != nil {
 		log.Panic("error opening file")
 	}
 
-	_, err = io.Copy(fileWriter, fh)
+	defer picture.Close()
+
+	// this step is very important
+	fileWriter, err := bodyWriter.CreateFormFile("photo", "img.png")
 	if err != nil {
-		log.Panic("error reading file")
+		log.Panic("error writing to buffer")
 	}
 
-	contentType := bodyWriter.FormDataContentType()
+	_, err = io.Copy(fileWriter, picture)
+	if err != nil {
+		log.Panic("error reading file", err)
+	}
+
+	fieldWriter, err := bodyWriter.CreateFormField("chat_id")
+	if err != nil {
+		log.Panic("error writing chat_id to buffer")
+	}
+
+	err = binary.Write(fieldWriter, binary.LittleEndian, chat)
+	if err != nil {
+		fmt.Println("binary.Write failed:", err)
+	}
+
 	bodyWriter.Close()
-	http.Post(fmt.Sprintf("%s%s/%s?chat_id=%v", baseURL, token, methodSendMessage, chat), contentType, bodyBuf)
+
+	req, err := http.NewRequest(http.MethodPost,
+		fmt.Sprintf("%s%s/%s?chat_id=%v", baseURL, token, methodSendPhoto, chat), bodyBuf)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	req.Header.Set("Content-Type", bodyWriter.FormDataContentType())
+
+	// Submit the request
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	// Check the response
+	if res.StatusCode != http.StatusOK {
+		log.Panic(fmt.Errorf("bad status: %s", res.Status))
+	}
 }
 
 func getJson(url string, target interface{}) error {
