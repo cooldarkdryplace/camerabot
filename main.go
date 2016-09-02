@@ -2,17 +2,30 @@ package main
 
 import (
 	"log"
+	"net/http"
+	"os/exec"
+	"strings"
 	"time"
 
+	"github.com/bilinguliar/camerabot/connection"
 	"github.com/bilinguliar/camerabot/telegram"
-	"strings"
 )
 
 const (
-	chatId int32 = -136923106
+	chatId      int64 = -1001077692103
+	sourcePhoto       = "/tmp/frame.png"
 )
 
-var lastUpdate int
+var (
+	lastUpdate int64
+	Client     connection.Client
+)
+
+func init() {
+	Client = &connection.HttpClient{
+		Impl: &http.Client{},
+	}
+}
 
 func main() {
 	for {
@@ -24,7 +37,7 @@ func main() {
 
 func getUpdates() []telegram.Update {
 	log.Println("Getting updates.")
-	return telegram.GetUpdates()
+	return telegram.GetUpdates(Client)
 }
 
 func processUpdates(updates []telegram.Update) {
@@ -55,7 +68,7 @@ func shouldBeProcessed(u telegram.Update) bool {
 	return true
 }
 
-func keepTrackOfUpdates(id int) {
+func keepTrackOfUpdates(id int64) {
 	if id > lastUpdate {
 		log.Println("Updating last")
 		lastUpdate = id
@@ -65,9 +78,15 @@ func keepTrackOfUpdates(id int) {
 func sayHi() {
 	log.Print("Saying hi.")
 
-	telegram.SendTextMessage(chatId, "Hi there.")
+	telegram.SendTextMessage(Client, chatId, "Hi there.")
 }
 
 func sendPhoto() {
-	telegram.SendPicture(chatId, "/home/zakharovan/img.png")
+	err := exec.Command("/opt/camerabot/updateFrame.sh").Run()
+	if err != nil {
+		log.Print(err)
+		return
+	}
+
+	telegram.SendPicture(Client, chatId, sourcePhoto)
 }

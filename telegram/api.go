@@ -1,15 +1,17 @@
 package telegram
 
 import (
-	"net/http"
-	"fmt"
-	"encoding/json"
-	"log"
-	"io"
 	"bytes"
-	"mime/multipart"
-	"os"
 	"encoding/binary"
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"mime/multipart"
+	"net/http"
+	"os"
+
+	"github.com/bilinguliar/camerabot/connection"
 )
 
 const (
@@ -17,59 +19,16 @@ const (
 
 	token = "181285124:AAEp5UShB5s7LyDMqJGWBDFR_DeBtBUlBXE"
 
-	methodSendMessage = "sendMessage"
-	methodSendPhoto = "sendPhoto"
-	methodGetUpdates = "getUpdates"
+	methodSendMessage    = "sendMessage"
+	methodSendPhoto      = "sendPhoto"
+	methodGetUpdates     = "getUpdates"
 	methodsendChatAction = "sendChatAction"
 )
 
-type Entity struct {
-	Type   string `json:"type"`
-	Offset int `json:"offset"`
-	Length int `json:"length"`
-}
+func GetUpdates(client connection.Client) []Update {
+	apiResponse := &UpdatesResponse{}
 
-type User struct {
-	ID        int `json:"id"`
-	FirstName string `json:"first_name"`
-	UserName  string `json:"username"`
-}
-
-type UpdatesResponse struct {
-	Ok      bool `json:"ok"`
-	Updates []Update `json:"result"`
-}
-
-type Chat struct {
-	ID    int `json:"id"`
-	Title string `json:"title"`
-	Type  string `json:"type"`
-}
-
-type Message struct {
-	ID       int `json:"message_id"`
-	Date     int `json:"date"`
-	Chat     Chat `json:"chat"`
-	Entities []Entity `json:"entities"`
-	Text     string `json:"text"`
-	From     User `json:"from"`
-}
-
-type Update struct {
-	ID      int `json:"update_id"`
-	Message Message `json:"message"`
-}
-
-type PhotoSize struct {
-	ID       int `json:"file_id"`
-	width    int `json:"width"`
-	height   int `json:"height"`
-	fileSize int `json:"file_size"`
-}
-
-func GetUpdates() []Update {
-	apiResponse := new(UpdatesResponse)
-	err := getJson(fmt.Sprintf("%s%s/%s", baseURL, token, methodGetUpdates), apiResponse)
+	err := getJson(client, fmt.Sprintf("%s%s/%s", baseURL, token, methodGetUpdates), apiResponse)
 
 	if err != nil {
 		log.Panic("Error getting updates", err)
@@ -78,12 +37,12 @@ func GetUpdates() []Update {
 	return apiResponse.Updates
 }
 
-func SendTextMessage(chat int32, m string) {
+func SendTextMessage(client connection.Client, chat int64, m string) {
 	log.Printf("Sending test message: %s to chat: %v", m, chat)
-	http.Get(fmt.Sprintf("%s%s/%s?chat_id=%v&text=%s", baseURL, token, methodSendMessage, chat, m))
+	client.Get(fmt.Sprintf("%s%s/%s?chat_id=%v&text=%s", baseURL, token, methodSendMessage, chat, m))
 }
 
-func SendPicture(chat int32, filename string) {
+func SendPicture(client connection.Client, chat int64, filename string) {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
@@ -127,7 +86,6 @@ func SendPicture(chat int32, filename string) {
 	req.Header.Set("Content-Type", bodyWriter.FormDataContentType())
 
 	// Submit the request
-	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
 		log.Panic(err)
@@ -139,8 +97,8 @@ func SendPicture(chat int32, filename string) {
 	}
 }
 
-func getJson(url string, target interface{}) error {
-	r, err := http.Get(url)
+func getJson(client connection.Client, url string, target interface{}) error {
+	r, err := client.Get(url)
 	if err != nil {
 		return err
 	}
