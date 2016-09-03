@@ -17,20 +17,26 @@ const (
 )
 
 var (
-	lastUpdate int64
-	Client     connection.Client
+	chatUpdatesMap map[int64]*ChatStatus
+	Client         connection.Client
 )
 
 func init() {
+	chatUpdatesMap = make(map[int64]*ChatStatus)
+
 	Client = &connection.HttpClient{
 		Impl: &http.Client{},
 	}
+
 	go sayHi()
 }
 
 func main() {
 	for {
-		processUpdates(getUpdates())
+		updates := getUpdates()
+		chatUpdatesMap = setChatStatuses(chatUpdatesMap, updates)
+		sendPictures(chatUpdatesMap)
+
 		time.Sleep(time.Second * 10)
 		log.Print("Main sleeping...")
 	}
@@ -42,54 +48,45 @@ func getUpdates() []telegram.Update {
 	return telegram.GetUpdates(Client)
 }
 
-func processUpdates(updates []telegram.Update) {
-	for _, u := range updates {
-		if !shouldBeProcessed(u) {
-			continue
+func sendPictures(chatsMap map[int64]*ChatStatus) {
+	for chatID, status := range chatsMap {
+		if status.WillSend {
+			sendPhoto(chatID)
 		}
-
-		log.Printf("Message type: %s", u.Message.Entities[0].Type)
-		if u.Message.Entities[0].Type == "bot_command" {
-
-			if strings.Contains(u.Message.Text, "/pic") {
-				log.Println("Picture requested!")
-				go sendPhoto(u.Message.Chat.ID)
-			}
-		}
-
-		keepTrackOfUpdates(u.ID)
 	}
 }
 
-func getChatsToSendPictureTo(updates []telegram.Update) map[int64]struct{} {
-	chats := make(map[int64]struct{}, len(updates))
+type ChatStatus struct {
+	LastProcessed int64
+	WillSend      bool
+}
 
+func setChatStatuses(chatUpdatesMap map[int64]*ChatStatus, updates []telegram.Update) map[int64]*ChatStatus {
 	for _, u := range updates {
 		if isUpdateContainsPicRequest(u) {
-			chats[u.Message.Chat.ID] = struct{}{}
+			status, present := chatUpdatesMap[u.Message.Chat.ID]
+
+			if present {
+				if status.LastProcessed < u.ID {
+					status.LastProcessed = u.ID
+					status.WillSend = true
+				} else {
+					status.WillSend = false
+				}
+			} else {
+				chatUpdatesMap[u.Message.Chat.ID] = &ChatStatus{
+					LastProcessed: u.ID,
+					WillSend:      true,
+				}
+			}
 		}
 	}
 
-	return chats
+	return chatUpdatesMap
 }
 
 func isUpdateContainsPicRequest(u telegram.Update) bool {
 	return u.Message.Entities[0].Type == "bot_command" && strings.Contains(u.Message.Text, "/pic")
-}
-
-func shouldBeProcessed(u telegram.Update) bool {
-	if u.ID <= lastUpdate || len(u.Message.Entities) == 0 {
-		return false
-	}
-
-	return true
-}
-
-func keepTrackOfUpdates(id int64) {
-	if id > lastUpdate {
-		log.Println("Updating last")
-		lastUpdate = id
-	}
 }
 
 func sayHi() {

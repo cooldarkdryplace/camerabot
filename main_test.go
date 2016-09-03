@@ -1,7 +1,6 @@
 package main
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/bilinguliar/camerabot/telegram"
@@ -69,8 +68,8 @@ func init() {
 					ID:   333444555666777,
 					Date: 123123130,
 					Chat: telegram.Chat{
-						ID:    2556677,
-						Title: "Kilnspotting",
+						ID:    3667788,
+						Title: "AnotherChat",
 						Type:  "superchat",
 					},
 					Entities: []telegram.Entity{
@@ -94,10 +93,30 @@ func init() {
 }
 
 func TestMustProcessSinglePictureRequestPerChatIfThereAreABunchOfThem(t *testing.T) {
-	expected := map[int64]struct{}{2556677: struct{}{}}
-	actual := getChatsToSendPictureTo(updates.Updates)
+	chatStatuses := make(map[int64]*ChatStatus)
+	expected := map[int64]*ChatStatus{
+		2556677: &ChatStatus{
+			LastProcessed: 77665544332211,
+			WillSend:      true,
+		},
+		3667788: &ChatStatus{
+			LastProcessed: 111222333444,
+			WillSend:      true,
+		},
+	}
 
-	if !reflect.DeepEqual(actual, expected) {
-		t.Errorf("Expected: %v but was %v", actual, expected)
+	actual := setChatStatuses(chatStatuses, updates.Updates)
+
+	if len(expected) != len(actual) {
+		t.Error("Resulting maps differ in length")
+	}
+
+	for k, _ := range expected {
+		actualStatus := actual[k]
+		expectedStatus := expected[k]
+
+		if actualStatus.LastProcessed != expectedStatus.LastProcessed {
+			t.Errorf("Expected last processed message to be: %d but was %d", expectedStatus.LastProcessed, actualStatus.LastProcessed)
+		}
 	}
 }
