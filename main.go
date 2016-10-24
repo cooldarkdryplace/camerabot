@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"time"
+	"fmt"
 
 	"github.com/bilinguliar/camerabot/connection"
 	"github.com/bilinguliar/camerabot/telegram"
@@ -37,7 +38,12 @@ func init() {
 
 func main() {
 	for {
-		updates := getUpdates()
+		updates, err := getUpdates()
+
+		if err != nil {
+			telegram.SendTextMessage(Client, mainChatId, fmt.Sprintf("Failed getting updates: %v", err))
+		}
+
 		chatUpdatesMap = setChatStatuses(chatUpdatesMap, updates)
 
 		handleUpdates(chatUpdatesMap)
@@ -46,7 +52,7 @@ func main() {
 	}
 }
 
-func getUpdates() []telegram.Update {
+func getUpdates() ([]telegram.Update, error) {
 	return telegram.GetUpdates(Client)
 }
 

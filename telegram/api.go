@@ -25,16 +25,17 @@ const (
 
 var token = os.Getenv("TOKEN")
 
-func GetUpdates(client connection.Client) []Update {
+func GetUpdates(client connection.Client) ([]Update, error) {
 	apiResponse := &UpdatesResponse{}
 
 	err := getJson(client, fmt.Sprintf("%s%s/%s", baseURL, token, methodGetUpdates), apiResponse)
 
 	if err != nil {
-		log.Panic("Error getting updates", err)
+		log.Print("Error getting updates", err)
+		return nil, err
 	}
 
-	return apiResponse.Updates
+	return apiResponse.Updates, nil
 }
 
 func SendTextMessage(client connection.Client, chat int64, m string) {
