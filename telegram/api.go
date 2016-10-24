@@ -17,13 +17,13 @@ import (
 const (
 	baseURL = "https://api.telegram.org/bot"
 
-	token = "181285124:AAEp5UShB5s7LyDMqJGWBDFR_DeBtBUlBXE"
-
 	methodSendMessage    = "sendMessage"
 	methodSendPhoto      = "sendPhoto"
 	methodGetUpdates     = "getUpdates"
 	methodsendChatAction = "sendChatAction"
 )
+
+var token = os.Getenv("TOKEN")
 
 func GetUpdates(client connection.Client) []Update {
 	apiResponse := &UpdatesResponse{}
@@ -46,7 +46,6 @@ func SendPicture(client connection.Client, chat int64, filename string) {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
-	// open file handle
 	picture, err := os.Open(filename)
 	if err != nil {
 		log.Panic("error opening file")
@@ -54,7 +53,6 @@ func SendPicture(client connection.Client, chat int64, filename string) {
 
 	defer picture.Close()
 
-	// this step is very important
 	fileWriter, err := bodyWriter.CreateFormFile("photo", "img.png")
 	if err != nil {
 		log.Panic("error writing to buffer")
@@ -85,13 +83,11 @@ func SendPicture(client connection.Client, chat int64, filename string) {
 
 	req.Header.Set("Content-Type", bodyWriter.FormDataContentType())
 
-	// Submit the request
 	res, err := client.Do(req)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	// Check the response
 	if res.StatusCode != http.StatusOK {
 		log.Panic(fmt.Errorf("bad status: %s", res.Status))
 	}
