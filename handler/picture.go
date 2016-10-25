@@ -14,21 +14,19 @@ const (
 )
 
 type PictureHandler struct {
-	cmd *exec.Cmd
 	command string
 	photoLocation string
 }
 
 func NewPictureHandler(photoLocation string) *PictureHandler {
 	return &PictureHandler {
-		cmd: exec.Command(picScript),
 		command: picCommand,
 		photoLocation: photoLocation,
 	}
 }
 
 func (ph PictureHandler) Handle(client connection.Client, chatId int64) error {
-	if err := ph.cmd.Run(); err != nil {
+	if err := exec.Command(picScript).Run(); err != nil {
 		log.Print("Failed generating new photo", err)
 		return err
 	}
