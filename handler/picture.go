@@ -29,7 +29,7 @@ func NewPictureHandler(photoLocation string) *PictureHandler {
 
 func (ph PictureHandler) Handle(client connection.Client, chatId int64) error {
 	if err := ph.cmd.Run(); err != nil {
-		log.Print("Failed generating new photo")
+		log.Print("Failed generating new photo", err)
 		return err
 	}
 
