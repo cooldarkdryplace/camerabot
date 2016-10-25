@@ -23,7 +23,11 @@ const (
 	methodsendChatAction = "sendChatAction"
 )
 
-var token = os.Getenv("TOKEN")
+var token string
+
+func init () {
+	token = os.Getenv("TOKEN")
+}
 
 func GetUpdates(client connection.Client) ([]Update, error) {
 	apiResponse := &UpdatesResponse{}

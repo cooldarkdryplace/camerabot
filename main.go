@@ -29,14 +29,14 @@ func init() {
 		Impl: &http.Client{},
 	}
 
-	handlers = [...]handler.Handler{
+	handlers = [1]handler.Handler{
 		handler.NewPictureHandler(sourcePhoto),
 	}
-
-	sayHi()
 }
 
 func main() {
+	sayHi()
+
 	for {
 		updates, err := getUpdates()
 
