@@ -1,14 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
-	"fmt"
 
 	"github.com/bilinguliar/camerabot/connection"
-	"github.com/bilinguliar/camerabot/telegram"
 	"github.com/bilinguliar/camerabot/handler"
+	"github.com/bilinguliar/camerabot/telegram"
 )
 
 const (
@@ -19,7 +19,7 @@ const (
 var (
 	chatUpdatesMap map[int64]*ChatStatus
 	Client         connection.Client
-	handlers [1]handler.Handler
+	handlers       [1]handler.Handler
 )
 
 func init() {
@@ -72,7 +72,7 @@ func handleUpdates(chatsMap map[int64]*ChatStatus) {
 
 type ChatStatus struct {
 	LastProcessed int64
-	Command string
+	Command       string
 	WillSend      bool
 }
 
@@ -96,7 +96,7 @@ func setChatStatuses(chatUpdatesMap map[int64]*ChatStatus, updates []telegram.Up
 			chatUpdatesMap[u.Message.Chat.ID] = &ChatStatus{
 				LastProcessed: u.ID,
 				WillSend:      true,
-				Command: u.Message.Text,
+				Command:       u.Message.Text,
 			}
 		}
 	}
@@ -113,4 +113,3 @@ func sayHi() {
 
 	telegram.SendTextMessage(Client, mainChatId, "Hi there.")
 }
-

@@ -1,26 +1,26 @@
 package handler
 
 import (
-	"os/exec"
 	"log"
+	"os/exec"
 
-	"github.com/bilinguliar/camerabot/telegram"
 	"github.com/bilinguliar/camerabot/connection"
+	"github.com/bilinguliar/camerabot/telegram"
 )
 
 const (
-	picScript = "/opt/camerabot/updateFrame.sh"
+	picScript  = "/opt/camerabot/updateFrame.sh"
 	picCommand = "/pic"
 )
 
 type PictureHandler struct {
-	command string
+	command       string
 	photoLocation string
 }
 
 func NewPictureHandler(photoLocation string) *PictureHandler {
-	return &PictureHandler {
-		command: picCommand,
+	return &PictureHandler{
+		command:       picCommand,
 		photoLocation: photoLocation,
 	}
 }

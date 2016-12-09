@@ -25,7 +25,7 @@ const (
 
 var token string
 
-func init () {
+func init() {
 	token = os.Getenv("TOKEN")
 }
 
