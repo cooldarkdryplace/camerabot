@@ -11,112 +11,86 @@ import (
 	"github.com/bilinguliar/camerabot/telegram"
 )
 
-type ChatStatus struct {
-	LastProcessed int64
-	Command       string
-	WillSend      bool
-}
-
 const (
 	mainChatId      int64 = -1001077692103
 	sourcePhoto           = "/tmp/frame.png"
+	zoomedPhoto           = "/tmp/zoomedFrame.png"
 	fallbackTimeout       = 20
 )
 
 var (
-	chatUpdatesMap map[int64]*ChatStatus
-	client         connection.Client
-	handlers       map[string]handler.Handler
-	lastUpdateID   int64
+	handlers     map[string]Handler
+	lastUpdateID int64
 )
 
+type Handler interface {
+	Handle(client connection.Client, chatID int64) error
+	GetCommand() string
+}
+
 func init() {
-	chatUpdatesMap = make(map[int64]*ChatStatus)
-
-	client = &connection.HttpClient{
-		Impl: &http.Client{},
-	}
-
-	handlers = make(map[string]handler.Handler)
+	handlers = make(map[string]Handler)
 
 	picHandler := handler.NewPictureHandler(sourcePhoto)
+	zoomHandler := handler.NewZoomHandler(zoomedPhoto)
 
 	handlers[picHandler.GetCommand()] = picHandler
+	handlers[zoomHandler.GetCommand()] = zoomHandler
 }
 
 func main() {
-	sayHi()
+	client := &connection.HttpClient{
+		Impl: &http.Client{},
+	}
+
+	sayHi(client)
 
 	for {
-		updates, err := getUpdates()
+		updates, err := getUpdates(client)
 		if err != nil {
 			telegram.SendTextMessage(client, mainChatId, fmt.Sprintf("Failed getting updates: %v", err))
 			time.Sleep(fallbackTimeout * time.Second)
 		}
 
-		chatUpdatesMap = setChatStatuses(chatUpdatesMap, updates)
-
 		log.Print("Polling...")
-		handleUpdates(chatUpdatesMap)
+		handleUpdates(updates, client)
 	}
 }
 
-func getUpdates() ([]telegram.Update, error) {
+func getUpdates(client connection.Client) ([]telegram.Update, error) {
 	return telegram.GetUpdates(client, lastUpdateID+1)
 }
 
-func handleUpdates(chatsMap map[int64]*ChatStatus) {
-	for chatID, status := range chatsMap {
-		if !status.WillSend {
-			continue
-		}
-
-		h, exists := handlers[status.Command]
-		if exists {
-			h.Handle(client, chatID)
-			return
-		}
-
-		log.Printf("Unknown command: %q ignored", status.Command)
-	}
-}
-
-func setChatStatuses(chatUpdatesMap map[int64]*ChatStatus, updates []telegram.Update) map[int64]*ChatStatus {
+func handleUpdates(updates []telegram.Update, client connection.Client) {
 	for _, u := range updates {
 		trackLastUpdateID(u.ID)
 
-		if !isUpdateContainsCommand(u) {
+		command := getCommand(u)
+		chatID := u.Message.Chat.ID
+
+		if command == "" {
 			continue
 		}
 
-		status, present := chatUpdatesMap[u.Message.Chat.ID]
-
-		if present {
-			if status.LastProcessed < u.ID {
-				status.LastProcessed = u.ID
-				status.WillSend = true
-				status.Command = u.Message.Text
-			} else {
-				status.WillSend = false
-			}
-		} else {
-			chatUpdatesMap[u.Message.Chat.ID] = &ChatStatus{
-				LastProcessed: u.ID,
-				WillSend:      true,
-				Command:       u.Message.Text,
-			}
+		if h, exists := handlers[command]; exists {
+			h.Handle(client, chatID)
+			continue
 		}
-	}
 
-	return chatUpdatesMap
+		log.Printf("Unknown command: %q ignored", command)
+	}
 }
 
-func isUpdateContainsCommand(u telegram.Update) bool {
+func getCommand(u telegram.Update) string {
 	if len(u.Message.Entities) == 0 {
-		return false
+		return ""
 	}
 
-	return u.Message.Entities[0].Type == "bot_command"
+	if u.Message.Entities[0].Type == "bot_command" {
+		return u.Message.Text
+	}
+
+	return ""
 }
 
 func trackLastUpdateID(ID int64) {
@@ -126,7 +100,7 @@ func trackLastUpdateID(ID int64) {
 	}
 }
 
-func sayHi() {
+func sayHi(client connection.Client) {
 	log.Print("Saying hi.")
 
 	telegram.SendTextMessage(client, mainChatId, "Hi there.")
