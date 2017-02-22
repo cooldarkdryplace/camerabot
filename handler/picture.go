@@ -15,18 +15,20 @@ const (
 
 type PictureHandler struct {
 	command       string
+	script        string
 	photoLocation string
 }
 
 func NewPictureHandler(photoLocation string) *PictureHandler {
 	return &PictureHandler{
 		command:       picCommand,
+		script:        picScript,
 		photoLocation: photoLocation,
 	}
 }
 
 func (ph PictureHandler) Handle(client connection.Client, chatId int64) error {
-	if err := exec.Command(picScript).Run(); err != nil {
+	if err := exec.Command(ph.script).Run(); err != nil {
 		log.Print("Failed generating new photo: ", err)
 		return err
 	}
