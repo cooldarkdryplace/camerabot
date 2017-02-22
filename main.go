@@ -11,27 +11,37 @@ import (
 	"github.com/bilinguliar/camerabot/telegram"
 )
 
+type ChatStatus struct {
+	LastProcessed int64
+	Command       string
+	WillSend      bool
+}
+
 const (
-	mainChatId  int64 = -1001077692103
-	sourcePhoto       = "/tmp/frame.png"
+	mainChatId      int64 = -1001077692103
+	sourcePhoto           = "/tmp/frame.png"
+	fallbackTimeout       = 20
 )
 
 var (
 	chatUpdatesMap map[int64]*ChatStatus
-	Client         connection.Client
-	handlers       [1]handler.Handler
+	client         connection.Client
+	handlers       map[string]handler.Handler
+	lastUpdateID   int64
 )
 
 func init() {
 	chatUpdatesMap = make(map[int64]*ChatStatus)
 
-	Client = &connection.HttpClient{
+	client = &connection.HttpClient{
 		Impl: &http.Client{},
 	}
 
-	handlers = [1]handler.Handler{
-		handler.NewPictureHandler(sourcePhoto),
-	}
+	handlers = make(map[string]handler.Handler)
+
+	picHandler := handler.NewPictureHandler(sourcePhoto)
+
+	handlers[picHandler.GetCommand()] = picHandler
 }
 
 func main() {
@@ -39,21 +49,20 @@ func main() {
 
 	for {
 		updates, err := getUpdates()
-
 		if err != nil {
-			telegram.SendTextMessage(Client, mainChatId, fmt.Sprintf("Failed getting updates: %v", err))
+			telegram.SendTextMessage(client, mainChatId, fmt.Sprintf("Failed getting updates: %v", err))
+			time.Sleep(fallbackTimeout * time.Second)
 		}
 
 		chatUpdatesMap = setChatStatuses(chatUpdatesMap, updates)
 
+		log.Print("Polling...")
 		handleUpdates(chatUpdatesMap)
-
-		time.Sleep(time.Second * 10)
 	}
 }
 
 func getUpdates() ([]telegram.Update, error) {
-	return telegram.GetUpdates(Client)
+	return telegram.GetUpdates(client, lastUpdateID+1)
 }
 
 func handleUpdates(chatsMap map[int64]*ChatStatus) {
@@ -62,22 +71,20 @@ func handleUpdates(chatsMap map[int64]*ChatStatus) {
 			continue
 		}
 
-		for _, h := range handlers {
-			if status.Command == h.GetCommand() {
-				h.Handle(Client, chatID)
-			}
+		h, exists := handlers[status.Command]
+		if exists {
+			h.Handle(client, chatID)
+			return
 		}
-	}
-}
 
-type ChatStatus struct {
-	LastProcessed int64
-	Command       string
-	WillSend      bool
+		log.Printf("Unknown command: %q ignored", status.Command)
+	}
 }
 
 func setChatStatuses(chatUpdatesMap map[int64]*ChatStatus, updates []telegram.Update) map[int64]*ChatStatus {
 	for _, u := range updates {
+		trackLastUpdateID(u.ID)
+
 		if !isUpdateContainsCommand(u) {
 			continue
 		}
@@ -105,11 +112,22 @@ func setChatStatuses(chatUpdatesMap map[int64]*ChatStatus, updates []telegram.Up
 }
 
 func isUpdateContainsCommand(u telegram.Update) bool {
+	if len(u.Message.Entities) == 0 {
+		return false
+	}
+
 	return u.Message.Entities[0].Type == "bot_command"
+}
+
+func trackLastUpdateID(ID int64) {
+	log.Printf("Last update ID: %d, incoming update ID: %d", lastUpdateID, ID)
+	if lastUpdateID < ID {
+		lastUpdateID = ID
+	}
 }
 
 func sayHi() {
 	log.Print("Saying hi.")
 
-	telegram.SendTextMessage(Client, mainChatId, "Hi there.")
+	telegram.SendTextMessage(client, mainChatId, "Hi there.")
 }
