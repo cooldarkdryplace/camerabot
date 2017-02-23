@@ -1,4 +1,3 @@
 #!/bin/bash
 
-/usr/bin/raspistill -n -q 98 -ex auto -roi 0.5,0.5,0.25,0.25 -hf -vf -t 1 -o /tmp/frame.png
-
+/usr/bin/raspistill -n -q 98 --ISO 100 -ex auto -sh 100 -roi 0.593,0.52,0.04,0.04 -hf -vf -t 1 -o /tmp/zoomedFrame.png

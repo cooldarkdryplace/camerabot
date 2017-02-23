@@ -13,8 +13,8 @@ import (
 
 const (
 	mainChatId      int64 = -1001077692103
-	sourcePhoto           = "/tmp/frame.png"
-	zoomedPhoto           = "/tmp/zoomedFrame.png"
+	sourcePhoto           = "/tmp/frame.jpg"
+	zoomedPhoto           = "/tmp/zoomedFrame.jpg"
 	fallbackTimeout       = 20
 )
 
