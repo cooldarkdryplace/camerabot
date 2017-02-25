@@ -14,8 +14,13 @@ Parametrized commands for raspistill are stored in external bash scripts.
 4. Start direct conversation with bot or add bot to group chat if yu are interested in broadcasting your kiln paranoia.
 
 ### Commands
-1. `/pi` sends ordinary photo.
+1. `/pic` sends ordinary photo.
 2. `/zoom` sends zoomed and croped region of interest. Kiln controller in my case.
+
+#### Examples
+![pic processing result](https://cloud.githubusercontent.com/assets/6103939/23331112/898d1204-fb67-11e6-8285-6efc5ba7816b.png)
+![another pic result](https://cloud.githubusercontent.com/assets/6103939/23331113/92065df0-fb67-11e6-9d0f-d8adc245f9a3.png)
+![zoom result](https://cloud.githubusercontent.com/assets/6103939/23331114/9b4fa8e4-fb67-11e6-876e-318642f38dfc.png)
 
 ## Hardware
 Currently runs on a Raspberry Pi. Using onboard V2 camera.
