@@ -1,4 +1,14 @@
 # camerabot
+
+## Building
+
+You need to get sources and to cross-compile them for ARM architecture. These can be easily done by these commands, assuming you have Go installed.
+
+1. `go get github.com/bilinguliar/camerabot`
+2. `env GOOS=linux GOARCH=arm go build -v github.com/bilinguliar/camerabot`
+
+As a result you will have binary suitable for running on Raspberry Pi. Copy it on device and proceed.
+
 ## Software
 Telegram bot that makes a photo and sends it to chat. 
 
@@ -11,7 +21,7 @@ Parametrized commands for raspistill are stored in external bash scripts.
 1. Setup Raspberry Pi and Pi camera.
 2. Set environment variable `TOKEN` with your bot token (Botfather can provide you with the one).
 3. Use systemd config to start as a service or simply run the app from the console.
-4. Start direct conversation with bot or add bot to group chat if yu are interested in broadcasting your kiln paranoia.
+4. Start direct conversation with bot or add bot to group chat if you are interested in broadcasting your kiln paranoia.
 
 ### Commands
 1. `/pic` sends ordinary photo.
