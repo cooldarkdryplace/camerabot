@@ -1,7 +1,7 @@
 language: go
 
 go:
-  - 1.8.x
+  - master
   - tip
 
 install:
@@ -20,4 +20,5 @@ script:
 after_script:
   - golint ./...
   - staticcheck ./...
-- errcheck ./...
+  - errcheck ./...
+
