@@ -121,18 +121,18 @@ func SendPicture(client connection.Client, chat int64, filename string) {
 func getJson(client connection.Client, url string, target interface{}) error {
 	r, err := client.Get(url)
 	if err != nil {
-		log.Printf("Tried to get conversation updates, error occured: %q\n", err)
+		log.Printf("Tried to get conversation updates, error occurred: %q\n", err)
 		return err
 	}
 	defer r.Body.Close()
 
 	if r.StatusCode != http.StatusOK {
 		log.Printf("HTTP Get failed. Status code: %d\n", r.StatusCode)
-		return errors.New("get was not succesful")
+		return errors.New("get was not successful")
 	}
 
 	if err = json.NewDecoder(r.Body).Decode(target); err != nil {
-		log.Println("Failed to unmarshal updates from JSON: %s", err)
+		log.Println("Failed to unmarshal updates from JSON:", err)
 		return err
 	}
 
