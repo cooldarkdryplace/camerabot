@@ -23,6 +23,7 @@ var (
 	lastUpdateID int64
 )
 
+// Handler processes command sent to bot.
 type Handler interface {
 	Handle(client connection.Client, chatID int64) error
 	GetCommand() string
