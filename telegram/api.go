@@ -39,7 +39,7 @@ func init() {
 func GetUpdates(client connection.Client, lastMsgID int64) ([]Update, error) {
 	apiResponse := &UpdatesResponse{}
 
-	err := getJson(
+	err := getJSON(
 		client,
 		fmt.Sprintf("%s%s/%s?timeout=%d&offset=%d", baseURL, token, methodGetUpdates, timeout, lastMsgID),
 		apiResponse,
@@ -118,7 +118,7 @@ func SendPicture(client connection.Client, chat int64, filename string) {
 	}
 }
 
-func getJson(client connection.Client, url string, target interface{}) error {
+func getJSON(client connection.Client, url string, target interface{}) error {
 	r, err := client.Get(url)
 	if err != nil {
 		log.Printf("Tried to get conversation updates, error occurred: %q\n", err)
