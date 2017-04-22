@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	mainChatId      int64 = -1001077692103
+	mainChatID      int64 = -1001077692103
 	sourcePhoto           = "/tmp/frame.jpg"
 	zoomedPhoto           = "/tmp/zoomedFrame.jpg"
 	fallbackTimeout       = 20
@@ -23,6 +23,7 @@ var (
 	lastUpdateID int64
 )
 
+// Handler processes command sent to bot.
 type Handler interface {
 	Handle(client connection.Client, chatID int64) error
 	GetCommand() string
@@ -48,7 +49,7 @@ func main() {
 	for {
 		updates, err := getUpdates(client)
 		if err != nil {
-			telegram.SendTextMessage(client, mainChatId, fmt.Sprintf("Failed getting updates: %v", err))
+			telegram.SendTextMessage(client, mainChatID, fmt.Sprintf("Failed getting updates: %v", err))
 			time.Sleep(fallbackTimeout * time.Second)
 		}
 
@@ -103,5 +104,5 @@ func trackLastUpdateID(ID int64) {
 func sayHi(client connection.Client) {
 	log.Print("Saying hi.")
 
-	telegram.SendTextMessage(client, mainChatId, "Hi there.")
+	telegram.SendTextMessage(client, mainChatID, "Hi there.")
 }

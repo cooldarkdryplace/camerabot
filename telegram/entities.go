@@ -39,7 +39,7 @@ type Update struct {
 
 type PhotoSize struct {
 	ID       int64 `json:"file_id"`
-	width    int   `json:"width"`
-	height   int   `json:"height"`
-	fileSize int64 `json:"file_size"`
+	Width    int   `json:"width"`
+	Height   int   `json:"height"`
+	FileSize int64 `json:"file_size"`
 }
