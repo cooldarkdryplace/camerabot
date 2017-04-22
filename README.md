@@ -1,5 +1,9 @@
 # camerabot
 
+[![Build Status](https://travis-ci.org/bilinguliar/camerabot.svg?branch=master)](https://travis-ci.org/bilinguliar/camerabot)
+[![Go Report Card](https://goreportcard.com/badge/github.com/bilinguliar/camerabot)](https://goreportcard.com/report/github.com/bilinguliar/camerabot)
+[![GoDoc](https://godoc.org/github.com/bilinguliar/camerabot?status.svg)](https://godoc.org/github.com/bilinguliar/camerabot)
+
 ## Building
 
 You need to get sources and to cross-compile them for ARM architecture. These can be easily done by these commands, assuming you have Go installed.
