@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	mainChatId      int64 = -1001077692103
+	mainChatID      int64 = -1001077692103
 	sourcePhoto           = "/tmp/frame.jpg"
 	zoomedPhoto           = "/tmp/zoomedFrame.jpg"
 	fallbackTimeout       = 20
@@ -48,7 +48,7 @@ func main() {
 	for {
 		updates, err := getUpdates(client)
 		if err != nil {
-			telegram.SendTextMessage(client, mainChatId, fmt.Sprintf("Failed getting updates: %v", err))
+			telegram.SendTextMessage(client, mainChatID, fmt.Sprintf("Failed getting updates: %v", err))
 			time.Sleep(fallbackTimeout * time.Second)
 		}
 
@@ -103,5 +103,5 @@ func trackLastUpdateID(ID int64) {
 func sayHi(client connection.Client) {
 	log.Print("Saying hi.")
 
-	telegram.SendTextMessage(client, mainChatId, "Hi there.")
+	telegram.SendTextMessage(client, mainChatID, "Hi there.")
 }
