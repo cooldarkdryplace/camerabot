@@ -1,15 +1,15 @@
 # camerabot
 
-[![Build Status](https://travis-ci.org/bilinguliar/camerabot.svg?branch=master)](https://travis-ci.org/bilinguliar/camerabot)
-[![Go Report Card](https://goreportcard.com/badge/github.com/bilinguliar/camerabot)](https://goreportcard.com/report/github.com/bilinguliar/camerabot)
-[![GoDoc](https://godoc.org/github.com/bilinguliar/camerabot?status.svg)](https://godoc.org/github.com/bilinguliar/camerabot)
+[![Build Status](https://travis-ci.org/cooldarkdryplace/camerabot.svg?branch=master)](https://travis-ci.org/cooldarkdryplace/camerabot)
+[![Go Report Card](https://goreportcard.com/badge/github.com/cooldarkdryplace/camerabot)](https://goreportcard.com/report/github.com/cooldarkdryplace/camerabot)
+[![GoDoc](https://godoc.org/github.com/cooldarkdryplace/camerabot?status.svg)](https://godoc.org/github.com/cooldarkdryplace/camerabot)
 
 ## Building
 
-You need to get sources and to cross-compile them for ARM architecture. These can be easily done by these commands, assuming you have Go installed.
+You need to get sources and cross-compile them for ARM architecture. These can be easily done by these commands, assuming you have Go installed.
 
-1. `go get github.com/bilinguliar/camerabot`
-2. `env GOOS=linux GOARCH=arm go build -v github.com/bilinguliar/camerabot`
+1. `go get github.com/cooldarkdryplace/camerabot`
+2. `env GOOS=linux GOARCH=arm go build -v github.com/cooldarkdryplace/camerabot`
 
 As a result you will have binary suitable for running on Raspberry Pi. Copy it on device and proceed.
 
@@ -18,7 +18,7 @@ Telegram bot that makes a photo and sends it to chat.
 
 I use this bot to monitor kiln temperature and make sure workshop is not on fire yet.
 Go part is responsible for interacting with Telegram API. Application uses long polling because in my case device is located behind two NATs. 
-Uses `raspistill` (via os.exec) to make photos.
+Uses `raspistill` (via `os.exec`) to make photos.
 Parametrized commands for raspistill are stored in external bash scripts.
 
 ### Running bot
