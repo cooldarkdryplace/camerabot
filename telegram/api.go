@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/bilinguliar/camerabot/connection"
+	"github.com/cooldarkdryplace/camerabot/connection"
 )
 
 const (

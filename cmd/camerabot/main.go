@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bilinguliar/camerabot/connection"
-	"github.com/bilinguliar/camerabot/handler"
-	"github.com/bilinguliar/camerabot/telegram"
+	"github.com/cooldarkdryplace/camerabot/connection"
+	"github.com/cooldarkdryplace/camerabot/handler"
+	"github.com/cooldarkdryplace/camerabot/telegram"
 )
 
 const (

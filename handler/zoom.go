@@ -4,8 +4,8 @@ import (
 	"log"
 	"os/exec"
 
-	"github.com/bilinguliar/camerabot/connection"
-	"github.com/bilinguliar/camerabot/telegram"
+	"github.com/cooldarkdryplace/camerabot/connection"
+	"github.com/cooldarkdryplace/camerabot/telegram"
 )
 
 const (
