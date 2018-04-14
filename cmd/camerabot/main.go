@@ -3,86 +3,37 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/http"
+	"os"
+	"strconv"
+	"sync"
 	"time"
 
-	"github.com/cooldarkdryplace/camerabot/connection"
 	"github.com/cooldarkdryplace/camerabot/handler"
 	"github.com/cooldarkdryplace/camerabot/telegram"
 )
 
 const (
-	mainChatID      int64 = -1001077692103
-	sourcePhoto           = "/tmp/frame.jpg"
-	zoomedPhoto           = "/tmp/zoomedFrame.jpg"
-	fallbackTimeout       = 20
+	fallbackTimeout = 20 * time.Second
+	defaultCacheDir = "/tmp"
 )
 
 var (
-	handlers     map[string]Handler
+	handlers map[string]Handler
+
+	mu           sync.Mutex
 	lastUpdateID int64
+
+	mainChatID int64
+	cacheDir   string
 )
 
 // Handler processes command sent to bot.
 type Handler interface {
-	Handle(client connection.Client, chatID int64) error
-	GetCommand() string
+	Handle(chatID int64) error
+	Command() string
 }
 
-func init() {
-	handlers = make(map[string]Handler)
-
-	picHandler := handler.NewPictureHandler(sourcePhoto)
-	zoomHandler := handler.NewZoomHandler(zoomedPhoto)
-
-	handlers[picHandler.GetCommand()] = picHandler
-	handlers[zoomHandler.GetCommand()] = zoomHandler
-}
-
-func main() {
-	client := &connection.HttpClient{
-		Impl: &http.Client{},
-	}
-
-	sayHi(client)
-
-	for {
-		updates, err := getUpdates(client)
-		if err != nil {
-			telegram.SendTextMessage(client, mainChatID, fmt.Sprintf("Failed getting updates: %v", err))
-			time.Sleep(fallbackTimeout * time.Second)
-		}
-
-		log.Print("Polling...")
-		handleUpdates(updates, client)
-	}
-}
-
-func getUpdates(client connection.Client) ([]telegram.Update, error) {
-	return telegram.GetUpdates(client, lastUpdateID+1)
-}
-
-func handleUpdates(updates []telegram.Update, client connection.Client) {
-	for _, u := range updates {
-		trackLastUpdateID(u.ID)
-
-		command := getCommand(u)
-		chatID := u.Message.Chat.ID
-
-		if command == "" {
-			continue
-		}
-
-		if h, exists := handlers[command]; exists {
-			h.Handle(client, chatID)
-			continue
-		}
-
-		log.Printf("Unknown command: %q ignored", command)
-	}
-}
-
-func getCommand(u telegram.Update) string {
+func command(u telegram.Update) string {
 	if len(u.Message.Entities) == 0 {
 		return ""
 	}
@@ -95,14 +46,69 @@ func getCommand(u telegram.Update) string {
 }
 
 func trackLastUpdateID(ID int64) {
+	mu.Lock()
 	log.Printf("Last update ID: %d, incoming update ID: %d", lastUpdateID, ID)
 	if lastUpdateID < ID {
 		lastUpdateID = ID
 	}
+	mu.Unlock()
 }
 
-func sayHi(client connection.Client) {
-	log.Print("Saying hi.")
+func handleUpdates(updates []telegram.Update) {
+	for _, u := range updates {
+		trackLastUpdateID(u.ID)
 
-	telegram.SendTextMessage(client, mainChatID, "Hi there.")
+		cmd := command(u)
+		chatID := u.Message.Chat.ID
+
+		if cmd == "" {
+			continue
+		}
+
+		if h, exists := handlers[cmd]; exists {
+			h.Handle(chatID)
+			continue
+		}
+
+		log.Printf("Unknown command: %q in chat: %d ignored", cmd, u.Message.Chat.ID)
+	}
+}
+
+func main() {
+	if v := os.Getenv("MAIN_CHAT_ID"); v != "" {
+		var err error
+		if mainChatID, err = strconv.ParseInt(v, 10, 64); err != nil {
+			log.Fatalf("Main chat ID is not a valid integer: %s", err)
+		}
+	} else {
+		log.Fatal("MAIN_CHAT_ID env var not set")
+	}
+
+	if v := os.Getenv("CACHE_DIR"); v != "" {
+		cacheDir = v
+	} else {
+		log.Printf("Using default cache directory: %s", defaultCacheDir)
+		cacheDir = defaultCacheDir
+	}
+
+	picHandler := handler.NewPictureHandler(cacheDir)
+	zoomHandler := handler.NewZoomHandler(cacheDir)
+
+	handlers = map[string]Handler{
+		picHandler.Command():  picHandler,
+		zoomHandler.Command(): zoomHandler,
+	}
+
+	telegram.SendTextMessage(mainChatID, "Hi there.")
+
+	for {
+		updates, err := telegram.GetUpdates(lastUpdateID + 1)
+		if err != nil {
+			telegram.SendTextMessage(mainChatID, fmt.Sprintf("Failed getting updates: %v", err))
+			time.Sleep(fallbackTimeout)
+		}
+
+		log.Print("Polling...")
+		handleUpdates(updates)
+	}
 }

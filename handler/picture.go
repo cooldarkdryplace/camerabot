@@ -4,13 +4,13 @@ import (
 	"log"
 	"os/exec"
 
-	"github.com/cooldarkdryplace/camerabot/connection"
 	"github.com/cooldarkdryplace/camerabot/telegram"
 )
 
 const (
-	picScript  = "/opt/camerabot/updateFrame.sh"
-	picCommand = "/pic"
+	sourcePhoto = "frame.jpg"
+	picScript   = "/opt/camerabot/updateFrame.sh"
+	picCommand  = "/pic"
 )
 
 type PictureHandler struct {
@@ -19,25 +19,25 @@ type PictureHandler struct {
 	photoLocation string
 }
 
-func NewPictureHandler(photoLocation string) *PictureHandler {
+func NewPictureHandler(cacheDir string) *PictureHandler {
 	return &PictureHandler{
 		command:       picCommand,
 		script:        picScript,
-		photoLocation: photoLocation,
+		photoLocation: cacheDir + "/" + sourcePhoto,
 	}
 }
 
-func (ph PictureHandler) Handle(client connection.Client, chatID int64) error {
+func (ph PictureHandler) Handle(chatID int64) error {
 	if err := exec.Command(ph.script).Run(); err != nil {
 		log.Print("Failed generating new photo: ", err)
 		return err
 	}
 
-	go telegram.SendPicture(client, chatID, ph.photoLocation)
+	go telegram.SendPicture(chatID, ph.photoLocation)
 
 	return nil
 }
 
-func (ph PictureHandler) GetCommand() string {
+func (ph PictureHandler) Command() string {
 	return ph.command
 }

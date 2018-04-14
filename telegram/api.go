@@ -11,8 +11,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
-
-	"github.com/cooldarkdryplace/camerabot/connection"
 )
 
 const (
@@ -27,7 +25,10 @@ const (
 	timeout = 60
 )
 
-var token string
+var (
+	token  string
+	client = &http.Client{}
+)
 
 func init() {
 	token = os.Getenv("TOKEN")
@@ -36,11 +37,10 @@ func init() {
 	}
 }
 
-func GetUpdates(client connection.Client, lastMsgID int64) ([]Update, error) {
+func GetUpdates(lastMsgID int64) ([]Update, error) {
 	apiResponse := &UpdatesResponse{}
 
 	err := getJSON(
-		client,
 		fmt.Sprintf("%s%s/%s?timeout=%d&offset=%d", baseURL, token, methodGetUpdates, timeout, lastMsgID),
 		apiResponse,
 	)
@@ -52,12 +52,12 @@ func GetUpdates(client connection.Client, lastMsgID int64) ([]Update, error) {
 	return apiResponse.Updates, nil
 }
 
-func SendTextMessage(client connection.Client, chat int64, m string) {
+func SendTextMessage(chat int64, m string) {
 	log.Printf("Sending text message: %q to chat: %v", m, chat)
 	client.Get(fmt.Sprintf("%s%s/%s?chat_id=%v&text=%s", baseURL, token, methodSendMessage, chat, m))
 }
 
-func SendPicture(client connection.Client, chat int64, filename string) {
+func SendPicture(chat int64, filename string) {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
@@ -87,8 +87,7 @@ func SendPicture(client connection.Client, chat int64, filename string) {
 		return
 	}
 
-	err = binary.Write(fieldWriter, binary.LittleEndian, chat)
-	if err != nil {
+	if err = binary.Write(fieldWriter, binary.LittleEndian, chat); err != nil {
 		fmt.Println("Failed to write data as binary to form field: ", err)
 		return
 	}
@@ -118,7 +117,7 @@ func SendPicture(client connection.Client, chat int64, filename string) {
 	}
 }
 
-func getJSON(client connection.Client, url string, target interface{}) error {
+func getJSON(url string, target interface{}) error {
 	r, err := client.Get(url)
 	if err != nil {
 		log.Printf("Tried to get conversation updates, error occurred: %q\n", err)
