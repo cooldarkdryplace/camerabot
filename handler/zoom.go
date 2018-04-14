@@ -4,6 +4,7 @@ import (
 	"log"
 	"os/exec"
 
+	"github.com/cooldarkdryplace/camerabot"
 	"github.com/cooldarkdryplace/camerabot/telegram"
 )
 
@@ -13,31 +14,27 @@ const (
 	zoomCommand = "/zoom"
 )
 
-type ZoomHandler struct {
-	command       string
-	script        string
-	photoLocation string
+func init() {
+	camerabot.Handlers[zoomCommand] = &ZoomHandler{}
 }
 
-func NewZoomHandler(cacheDir string) *ZoomHandler {
-	return &ZoomHandler{
-		command:       zoomCommand,
-		script:        zoomScript,
-		photoLocation: cacheDir + "/" + zoomedPhoto,
-	}
+type ZoomHandler struct{}
+
+func (zh *ZoomHandler) Command() string {
+	return zoomCommand
 }
 
-func (zh ZoomHandler) Handle(chatId int64) error {
-	if err := exec.Command(zh.script).Run(); err != nil {
+func (zh *ZoomHandler) Help() string {
+	return "Make zoomed photo and send it to the chat."
+}
+
+func (zh *ZoomHandler) Handle(chatId int64) error {
+	if err := exec.Command(zoomScript).Run(); err != nil {
 		log.Print("Failed generating new zoomed photo: ", err)
 		return err
 	}
 
-	go telegram.SendPicture(chatId, zh.photoLocation)
+	go telegram.SendPicture(chatId, camerabot.CacheDir+"/"+zoomedPhoto)
 
 	return nil
-}
-
-func (zh ZoomHandler) Command() string {
-	return zh.command
 }

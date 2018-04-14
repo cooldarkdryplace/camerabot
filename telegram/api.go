@@ -52,9 +52,20 @@ func GetUpdates(lastMsgID int64) ([]Update, error) {
 	return apiResponse.Updates, nil
 }
 
-func SendTextMessage(chat int64, m string) {
+func SendTextMessage(chat int64, m string) error {
 	log.Printf("Sending text message: %q to chat: %v", m, chat)
-	client.Get(fmt.Sprintf("%s%s/%s?chat_id=%v&text=%s", baseURL, token, methodSendMessage, chat, m))
+	resp, err := client.Get(fmt.Sprintf("%s%s/%s?chat_id=%v&text=%s", baseURL, token, methodSendMessage, chat, m))
+	if err != nil {
+		return fmt.Errorf("failed to send message: %s", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		log.Println("Message was not send, status: %s", resp.Status)
+		return fmt.Errorf("failed to send message, status: %s", resp.Status)
+	}
+
+	return nil
 }
 
 func SendPicture(chat int64, filename string) {

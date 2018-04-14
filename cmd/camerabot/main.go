@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/cooldarkdryplace/camerabot"
+	_ "github.com/cooldarkdryplace/camerabot/handler"
 )
 
 const defaultCacheDir = "/tmp"

@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cooldarkdryplace/camerabot/handler"
 	"github.com/cooldarkdryplace/camerabot/telegram"
 )
 
@@ -20,20 +19,13 @@ var (
 	lastUpdateID int64
 )
 
-var (
-	picHandler  = handler.NewPictureHandler(CacheDir)
-	zoomHandler = handler.NewZoomHandler(CacheDir)
-
-	handlers = map[string]Handler{
-		picHandler.Command():  picHandler,
-		zoomHandler.Command(): zoomHandler,
-	}
-)
+var Handlers = make(map[string]Handler)
 
 // Handler processes command sent to bot.
 type Handler interface {
-	Handle(chatID int64) error
 	Command() string
+	Handle(chatID int64) error
+	Help() string
 }
 
 func command(u telegram.Update) string {
@@ -68,7 +60,7 @@ func handleUpdates(updates []telegram.Update) {
 			continue
 		}
 
-		if h, exists := handlers[cmd]; exists {
+		if h, exists := Handlers[cmd]; exists {
 			h.Handle(chatID)
 			continue
 		}
