@@ -37,6 +37,7 @@ func init() {
 	}
 }
 
+// GetUpdates with IDs greater than provided value.
 func GetUpdates(lastMsgID int64) ([]Update, error) {
 	apiResponse := &UpdatesResponse{}
 
@@ -52,6 +53,7 @@ func GetUpdates(lastMsgID int64) ([]Update, error) {
 	return apiResponse.Updates, nil
 }
 
+// SendTextMessage to the chat with provided ID.
 func SendTextMessage(chat int64, m string) error {
 	log.Printf("Sending text message: %q to chat: %v", m, chat)
 	resp, err := client.Get(fmt.Sprintf("%s%s/%s?chat_id=%v&text=%s", baseURL, token, methodSendMessage, chat, m))
@@ -68,6 +70,7 @@ func SendTextMessage(chat int64, m string) error {
 	return nil
 }
 
+// SendPicture to the chat.
 func SendPicture(chat int64, filename string) {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
@@ -122,6 +125,7 @@ func SendPicture(chat int64, filename string) {
 		log.Println("Error during POST to Telegram API: ", err)
 		return
 	}
+	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
 		log.Printf("HTTP status for API call was not OK: %s\n", res.Status)

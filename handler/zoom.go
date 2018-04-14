@@ -28,13 +28,13 @@ func (zh *ZoomHandler) Help() string {
 	return "Make zoomed photo and send it to the chat."
 }
 
-func (zh *ZoomHandler) Handle(chatId int64) error {
+func (zh *ZoomHandler) Handle(chatID int64) error {
 	if err := exec.Command(zoomScript).Run(); err != nil {
 		log.Print("Failed generating new zoomed photo: ", err)
 		return err
 	}
 
-	go telegram.SendPicture(chatId, camerabot.CacheDir+"/"+zoomedPhoto)
+	go telegram.SendPicture(chatID, camerabot.CacheDir+"/"+zoomedPhoto)
 
 	return nil
 }

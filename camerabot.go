@@ -12,19 +12,26 @@ import (
 const fallbackTimeout = 20 * time.Second
 
 var (
+	// MainChatID refers to chat where camerabot will send error reports.
 	MainChatID int64
-	CacheDir   string
+
+	// CacheDir is a path to dorectory where last photos are stored.
+	CacheDir string
 
 	mu           sync.Mutex
 	lastUpdateID int64
 )
 
+// Handlers implement commands that are executed by bot. Unknown commands ignored.
 var Handlers = make(map[string]Handler)
 
 // Handler processes command sent to bot.
 type Handler interface {
+	// Command name supported by handler.
 	Command() string
+	// Handle supported command.
 	Handle(chatID int64) error
+	// Help message. Help handler will show it.
 	Help() string
 }
 
@@ -69,6 +76,7 @@ func handleUpdates(updates []telegram.Update) {
 	}
 }
 
+// ListenAndServe gets updates and processes them.
 func ListenAndServe() {
 	telegram.SendTextMessage(MainChatID, "Hi there.")
 
