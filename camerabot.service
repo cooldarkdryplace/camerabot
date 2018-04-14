@@ -1,0 +1,16 @@
+[Unit]
+Description=Telegram Camera Bot
+After=syslog.target network.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+ExecStart=/opt/camerabot/camerabot
+
+Restart=always
+TimeoutStopSec=5
+
+Environment="TOKEN=secret"
+Environment="MAIN_CHAT_ID=42"
+Environment="CACHE_DIR=/tmp"
