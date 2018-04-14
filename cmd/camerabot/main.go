@@ -36,5 +36,5 @@ func main() {
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 
 	<-signalChan
-	log.Println("Interrupt recieved. Graceful shutdown.")
+	log.Println("Interrupt received. Graceful shutdown.")
 }
