@@ -9,7 +9,7 @@
 You need to get sources and cross-compile them for ARM architecture. These can be easily done by these commands, assuming you have Go installed.
 
 1. `go get github.com/cooldarkdryplace/camerabot`
-2. `env GOOS=linux GOARCH=arm go build -v github.com/cooldarkdryplace/camerabot`
+2. `env GOOS=linux GOARCH=arm go build -v github.com/cooldarkdryplace/camerabot/cmd/camerabot`
 
 As a result you will have binary suitable for running on Raspberry Pi. Copy it on device and proceed.
 
