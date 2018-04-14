@@ -61,7 +61,7 @@ func SendTextMessage(chat int64, m string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		log.Println("Message was not send, status: %s", resp.Status)
+		log.Printf("Message was not send, status: %s", resp.Status)
 		return fmt.Errorf("failed to send message, status: %s", resp.Status)
 	}
 
