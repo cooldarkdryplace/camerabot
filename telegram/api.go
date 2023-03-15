@@ -71,41 +71,34 @@ func SendTextMessage(chat int64, m string) error {
 }
 
 // SendPicture to the chat.
-func SendPicture(chat int64, filename string) {
+func SendPicture(chat int64, filename string) error {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
 	picture, err := os.Open(filename)
 	if err != nil {
-		log.Println("Error opening file: ", err)
-		return
+		return fmt.Errorf("error opening file: %w", err)
 	}
 
 	defer picture.Close()
 
 	fileWriter, err := bodyWriter.CreateFormFile("photo", "img.png")
 	if err != nil {
-		log.Println("Error writing to buffer: ", err)
-		return
+		return fmt.Errorf("error writing to buffer: %w", err)
 	}
 
-	_, err = io.Copy(fileWriter, picture)
-	if err != nil {
-		log.Println("Error copying file: ", err)
-		return
+	if _, err := io.Copy(fileWriter, picture); err != nil {
+		return fmt.Errorf("error copying file: %w", err)
 	}
 
 	fieldWriter, err := bodyWriter.CreateFormField("chat_id")
 	if err != nil {
-		log.Println("Error writing chat_id to buffer: ", err)
-		return
+		return fmt.Errorf("error writing chat_id to buffer: %w", err)
 	}
 
 	if err = binary.Write(fieldWriter, binary.LittleEndian, chat); err != nil {
-		fmt.Println("Failed to write data as binary to form field: ", err)
-		return
+		return fmt.Errorf("failed to write data as binary to form field: %w", err)
 	}
-
 	bodyWriter.Close()
 
 	req, err := http.NewRequest(
@@ -114,22 +107,22 @@ func SendPicture(chat int64, filename string) {
 		bodyBuf,
 	)
 	if err != nil {
-		log.Println("Failed to create POST request with picture: ", err)
-		return
+		return fmt.Errorf("failed to create POST request with picture: %w", err)
 	}
 
 	req.Header.Set("Content-Type", bodyWriter.FormDataContentType())
 
 	res, err := client.Do(req)
 	if err != nil {
-		log.Println("Error during POST to Telegram API: ", err)
-		return
+		return fmt.Errorf("error during POST to Telegram API: %w", err)
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		log.Printf("HTTP status for API call was not OK: %s\n", res.Status)
+		return fmt.Errorf("HTTP status for API call was not OK: %s\n", res.Status)
 	}
+
+	return nil
 }
 
 func getJSON(url string, target interface{}) error {
