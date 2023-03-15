@@ -6,6 +6,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/VictoriaMetrics/metrics"
+
 	"github.com/cooldarkdryplace/camerabot/telegram"
 )
 
@@ -20,6 +22,8 @@ var (
 
 	mu           sync.Mutex
 	lastUpdateID int64
+
+	commandsTotal = metrics.NewCounter("commands_total")
 )
 
 // Handlers implement commands that are executed by bot. Unknown commands ignored.
@@ -68,6 +72,7 @@ func handleUpdates(updates []telegram.Update) {
 		}
 
 		if h, exists := Handlers[cmd]; exists {
+			commandsTotal.Inc()
 			h.Handle(chatID)
 			continue
 		}

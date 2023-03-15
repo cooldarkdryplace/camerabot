@@ -1,8 +1,12 @@
 package handler
 
 import (
+	"fmt"
 	"log"
 	"os/exec"
+	"path/filepath"
+
+	"github.com/VictoriaMetrics/metrics"
 
 	"github.com/cooldarkdryplace/camerabot"
 	"github.com/cooldarkdryplace/camerabot/telegram"
@@ -13,6 +17,8 @@ const (
 	picScript   = "/opt/camerabot/updateFrame.sh"
 	picCommand  = "/pic"
 )
+
+var picsSentTotal = metrics.NewCounter("pictures_sent_total")
 
 func init() {
 	camerabot.Handlers[picCommand] = &PictureHandler{}
@@ -30,11 +36,15 @@ func (ph *PictureHandler) Help() string {
 
 func (ph *PictureHandler) Handle(chatID int64) error {
 	if err := exec.Command(picScript).Run(); err != nil {
-		log.Print("Failed generating new photo: ", err)
+		log.Printf("Failed generating new photo: %s", err)
 		return err
 	}
 
-	go telegram.SendPicture(chatID, camerabot.CacheDir+"/"+sourcePhoto)
+	err := telegram.SendPicture(chatID, filepath.Join(camerabot.CacheDir, sourcePhoto))
+	if err != nil {
+		return fmt.Errorf("failed to send pictures: %w", err)
+	}
+	picsSentTotal.Inc()
 
 	return nil
 }
